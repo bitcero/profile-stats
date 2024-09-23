@@ -2,13 +2,20 @@ const https = require("https");
 const fs = require("fs");
 const core = require("@actions/core");
 const { execSync } = require("child_process");
+const moment = require("moment");
 const dotenv = require("dotenv").config();
 
-const GH_USERNAME = core.getInput("GH_USERNAME");
+const GH_USERNAME = core.getInput("GH_USERNAME") || process.env.GH_LOGIN;
 const COMMIT_NAME = core.getInput("COMMIT_NAME");
 const COMMIT_EMAIL = core.getInput("COMMIT_EMAIL");
 const COMMIT_MSG = core.getInput("COMMIT_MSG");
-const TARGET_FILE = core.getInput("TARGET_FILE");
+const TARGET_FILE = core.getInput("TARGET_FILE") || "README.md";
+
+const startOfLastWeek = moment()
+  .subtract(1, "weeks")
+  .startOf("week")
+  .toISOString();
+const endOfLastWeek = moment().subtract(1, "weeks").endOf("week").toISOString();
 
 const USER_QUERY = `
   query User {
@@ -25,12 +32,17 @@ const USER_QUERY = `
           pullRequests(states: [MERGED]) {
               totalCount
           }
-          allTimeCommits: contributionsCollection {
+          lastYearCommits: contributionsCollection {
               totalCommitContributions
               totalPullRequestContributions
               totalPullRequestReviewContributions
           }
-          todayCommits: contributionsCollection(from: "${new Date().toISOString()}", to: "${new Date().toISOString()}" ) {
+          todayCommits: contributionsCollection(from: "${moment().startOf("day").toISOString()}", to: "${moment().endOf("day").toISOString()}" ) {
+              totalCommitContributions
+              totalPullRequestContributions
+              totalPullRequestReviewContributions
+          }
+          weekCommits: contributionsCollection(from: "${startOfLastWeek}", to: "${endOfLastWeek}" ) {
               totalCommitContributions
               totalPullRequestContributions
               totalPullRequestReviewContributions
@@ -86,14 +98,20 @@ function generateReadmeContent(userData) {
 
 - 🏆 ${userData.repositories.totalCount} repositories created
 - 🔀 ${userData.pullRequests.totalCount} merged pull requests
-- 💻 ${userData.allTimeCommits.totalCommitContributions} total commits
-- 🧐 ${userData.allTimeCommits.totalPullRequestReviewContributions} code reviews
+- 💻 ${userData.lastYearCommits.totalCommitContributions} total commits last year
+- 🧐 ${userData.lastYearCommits.totalPullRequestReviewContributions} code reviews last year
 
 ### Today's Activity
 
 - 📝 ${userData.todayCommits.totalCommitContributions} commits
 - 🤝 ${userData.todayCommits.totalPullRequestContributions} pull requests
 - 👀 ${userData.todayCommits.totalPullRequestReviewContributions} reviews
+
+### Last Week's Activity
+
+- 💻 ${userData.weekCommits.totalCommitContributions} commits
+- 🤝 ${userData.weekCommits.totalPullRequestContributions} pull requests
+- 👀 ${userData.weekCommits.totalPullRequestReviewContributions} reviews
 
 ${userData.isHireable ? "🔍 I am open to new opportunities!" : ""}
   `;
@@ -128,7 +146,6 @@ function commitAndPushChanges() {
 }
 
 fetchData(USER_QUERY, (bodyJson) => {
-  console.log(bodyJson);
   const userData = bodyJson.data.user;
   const readmeContent = generateReadmeContent(userData);
   updateReadme(readmeContent);
