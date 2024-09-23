@@ -2,6 +2,7 @@ const https = require("https");
 const fs = require("fs");
 const core = require("@actions/core");
 const { execSync } = require("child_process");
+const dotenv = require("dotenv").config();
 
 const GH_USERNAME = core.getInput("GH_USERNAME");
 const COMMIT_NAME = core.getInput("COMMIT_NAME");
