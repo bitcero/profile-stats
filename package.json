@@ -1,0 +1,17 @@
+{
+  "name": "profile-action",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node src/index.js",
+    "build": "ncc build src/index.js -o dist"
+  },
+  "author": "Eduardo Cortes",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "@vercel/ncc": "^0.38.1",
+    "dotenv": "^16.4.5"
+  }
+}
