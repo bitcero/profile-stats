@@ -81,10 +81,6 @@ function fetchData(query, callback) {
 
 function generateReadmeContent(userData) {
   return `
-# Hello, I am ${GH_USERNAME} 👋
-
-${userData.status.message ? `🌟 ${userData.status.message}` : ""}
-
 ## My GitHub Stats
 
 - 🏆 ${userData.repositories.totalCount} repositories created
@@ -99,17 +95,24 @@ ${userData.status.message ? `🌟 ${userData.status.message}` : ""}
 - 👀 ${userData.todayCommits.totalPullRequestReviewContributions} reviews
 
 ${userData.isHireable ? "🔍 I am open to new opportunities!" : ""}
-
-[My GitHub Profile](${userData.url})
-${userData.websiteUrl ? `[My Website](${userData.websiteUrl})` : ""}
-
-*Last updated: ${new Date().toLocaleString()}*
   `;
 }
 
 function updateReadme(content) {
-  fs.writeFileSync(TARGET_FILE, content);
-  console.log("README updated successfully");
+  let readmeContent = fs.readFileSync(TARGET_FILE, "utf8");
+  const sectionStart = "<!--SECTION:stats-->";
+  const sectionEnd = "<!--/SECTION:stats-->";
+  const startIndex = readmeContent.indexOf(sectionStart) + sectionStart.length;
+  const endIndex = readmeContent.indexOf(sectionEnd);
+
+  if (startIndex !== -1 && endIndex !== -1) {
+    readmeContent = readmeContent.substring(0, startIndex) + content + readmeContent.substring(endIndex);
+    fs.writeFileSync(TARGET_FILE, readmeContent);
+    console.log("README updated successfully");
+  } else {
+    console.error("Section markers not found in README.md");
+    core.setFailed("Section markers not found in README.md");
+  }
 }
 
 function commitAndPushChanges() {
