@@ -129,7 +129,7 @@ function fetchData(query, callback) {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${process.env.GITHUB_TOKEN}`,
+      Authorization: `Bearer ${process.env.GH_TOKEN}`,
       "User-Agent": "github-action",
     },
   };
@@ -182,7 +182,10 @@ function updateReadme(content) {
   const endIndex = readmeContent.indexOf(sectionEnd);
 
   if (startIndex !== -1 && endIndex !== -1) {
-    readmeContent = readmeContent.substring(0, startIndex) + content + readmeContent.substring(endIndex);
+    readmeContent =
+      readmeContent.substring(0, startIndex) +
+      content +
+      readmeContent.substring(endIndex);
     fs.writeFileSync(TARGET_FILE, readmeContent);
     console.log("README updated successfully");
   } else {
@@ -205,6 +208,7 @@ fetchData(USER_QUERY, (bodyJson) => {
   updateReadme(readmeContent);
   commitAndPushChanges();
 });
+
 })();
 
 module.exports = __webpack_exports__;
