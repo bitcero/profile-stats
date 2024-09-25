@@ -147,6 +147,7 @@ function commitAndPushChanges() {
 
 fetchData(USER_QUERY, (bodyJson) => {
   const userData = bodyJson.data.user;
+  console.log(userData);
   const readmeContent = generateReadmeContent(userData);
   updateReadme(readmeContent);
   commitAndPushChanges();
